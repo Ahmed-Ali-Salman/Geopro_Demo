@@ -1,0 +1,72 @@
+# ==============================================================================
+# GeoPro Demo — Default Pipeline Configuration
+# ==============================================================================
+
+project:
+  name: GeoPro Demo
+  version: 0.1.0
+
+# ---------- Paths ----------
+paths:
+  lidar_dir: data/nuscenes_processed
+  images_dir: data/nuscenes_processed/images
+  metadata_csv: data/nuscenes_processed/meta.csv
+  basemap: data/basemap/middle_east.mbtiles
+  output_db: output/nuscenes_features.gpkg
+  export_dir: output/exports
+  models_dir: models
+
+# ---------- LiDAR Processing ----------
+lidar:
+  chunk_size: 500_000          # Points per chunk for large-file streaming
+  target_crs: "EPSG:4326"     # Reproject all input to WGS84
+  voxel_size: 0.1              # Meters — voxel downsampling resolution
+  outlier_nb_neighbors: 20
+  outlier_std_ratio: 2.0
+
+# ---------- Ground Removal ----------
+ground_removal:
+  method: ransac               # ransac | csf
+  ransac_distance_threshold: 0.3
+  ransac_n: 3
+  ransac_num_iterations: 1000
+
+# ---------- Segmentation ----------
+segmentation:
+  algorithm: dbscan             # dbscan | hdbscan
+  eps: 0.8                      # DBSCAN neighbourhood radius (meters)
+  min_samples: 15
+  min_cluster_points: 10
+
+# ---------- Detection ----------
+detection:
+  model: models/yolo26n.pt
+  confidence_threshold: 0.15
+  iou_threshold: 0.45
+  image_size: 1280              # Inference input size
+  batch_size: 4
+  device: "cpu"                   # Use CPU for demo
+
+# ---------- OCR ----------
+ocr:
+  engine: paddleocr                 # Use PaddleOCR
+  languages: ["ar", "en"]
+  use_gpu: false
+  confidence_threshold: 0.4
+  deskew: true
+  enhance_contrast: true
+
+# ---------- Fusion ----------
+fusion:
+  iou_match_threshold: 0.3     # 2D↔3D matching IoU threshold
+  max_projection_distance: 100  # metres — ignore points beyond this
+
+# ---------- Storage ----------
+storage:
+  analytics_backend: duckdb     # Enable DuckDB
+
+# ---------- UI ----------
+ui:
+  host: "0.0.0.0"
+  port: 8000
+  debug: false

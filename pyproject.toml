@@ -1,0 +1,77 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "geopro"
+version = "0.1.0"
+description = "Computer Vision & 3D Visual Perception pipeline for roadside asset detection from MMS data"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "Proprietary"}
+authors = [
+    {name = "GeoPro Team"},
+]
+dependencies = [
+    # LiDAR I/O
+    "laspy[lazrs]>=2.5",
+    "plyfile>=1.0",
+    # Point cloud & 3D
+    "open3d>=0.18",
+    "numpy>=1.24,<2.0",
+    "scipy>=1.11",
+    "scikit-learn>=1.3",
+    # Computer Vision
+    "ultralytics>=8.3",
+    "opencv-python-headless>=4.8",
+    "Pillow>=10.0",
+    # OCR
+    "paddlepaddle>=2.6",
+    "paddleocr>=2.7",
+    "surya-ocr>=0.8",
+    "python-bidi>=0.4",
+    "arabic-reshaper>=3.0",
+    # Geospatial
+    "pyproj>=3.6",
+    "shapely>=2.0",
+    "geopandas>=0.14",
+    "fiona>=1.9",
+    "geojson>=3.0",
+    # Storage
+    "sqlalchemy>=2.0",
+    "duckdb>=1.2",
+    # Config
+    "pydantic>=2.5",
+    "pydantic-settings>=2.1",
+    "pyyaml>=6.0",
+    # UI
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.32",
+    "jinja2>=3.1",
+    # CLI
+    "typer>=0.9",
+    "rich>=13.0",
+    # Data
+    "pandas>=2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4",
+    "pytest-cov>=4.1",
+    "ruff>=0.1",
+]
+
+[project.scripts]
+geopro = "geopro.cli:app"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.pytest.ini_options]
+testpaths = ["src/tests"]
+addopts = "-v --tb=short"

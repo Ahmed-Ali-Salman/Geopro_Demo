@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GeoPro Demo — Feature Review</title>
+    <meta name="description" content="Interactive review interface for detected roadside assets">
+
+    <!-- MapLibre GL JS CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.css" />
+
+    <style>
+        :root {
+            --bg-primary: #0f172a;
+            --bg-secondary: #1e293b;
+            --bg-tertiary: #334155;
+            --text-primary: #f1f5f9;
+            --text-secondary: #94a3b8;
+            --accent: #38bdf8;
+            --accent-hover: #7dd3fc;
+            --success: #4ade80;
+            --warning: #fbbf24;
+            --danger: #f87171;
+            --border: #475569;
+            --radius: 8px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* ── Header ── */
+        .header {
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border);
+            padding: 0.5rem 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 48px;
+            z-index: 1000;
+        }
+
+        .header h1 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, var(--accent), #a78bfa);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .stats {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .stat-badge {
+            background: var(--bg-tertiary);
+            padding: 0.2rem 0.6rem;
+            border-radius: 12px;
+            font-weight: 500;
+        }
+
+        /* ── Layout ── */
+        .main {
+            display: flex;
+            height: calc(100vh - 48px);
+        }
+
+        /* ── Sidebar ── */
+        .sidebar {
+            width: 340px;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .filter-bar {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-bar select,
+        .filter-bar input {
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.35rem 0.5rem;
+            font-size: 0.8rem;
+            flex: 1;
+            min-width: 80px;
+        }
+
+        .feature-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+        }
+
+        .feature-item {
+            background: var(--bg-tertiary);
+            border: 1px solid transparent;
+            border-radius: var(--radius);
+            padding: 0.65rem 0.75rem;
+            margin-bottom: 0.4rem;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+
+        .feature-item:hover {
+            border-color: var(--accent);
+            box-shadow: var(--shadow);
+        }
+
+        .feature-item.active {
+            border-color: var(--accent);
+            background: rgba(56, 189, 248, 0.1);
+        }
+
+        .feature-item .fi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-item .fi-class {
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+
+        .feature-item .fi-conf {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        .feature-item .fi-coords {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+        }
+
+        /* ── Map ── */
+        #map {
+            flex: 1;
+            z-index: 1;
+        }
+
+        /* ── Detail Panel ── */
+        .detail-panel {
+            width: 360px;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border);
+            overflow-y: auto;
+            padding: 1rem;
+            display: none;
+        }
+
+        .detail-panel.open {
+            display: block;
+        }
+
+        .detail-panel h2 {
+            font-size: 1rem;
+            margin-bottom: 0.75rem;
+            color: var(--accent);
+        }
+
+        .detail-panel .field-group {
+            margin-bottom: 0.75rem;
+        }
+
+        .detail-panel label {
+            display: block;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.2rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .detail-panel input,
+        .detail-panel select,
+        .detail-panel textarea {
+            width: 100%;
+            background: var(--bg-tertiary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 0.4rem 0.6rem;
+            font-size: 0.85rem;
+            font-family: inherit;
+        }
+
+        .detail-panel textarea {
+            resize: vertical;
+            min-height: 60px;
+        }
+
+        .detail-panel .btn-row {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            padding: 0.4rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+
+        .btn-accept {
+            background: var(--success);
+            color: #000;
+        }
+
+        .btn-reject {
+            background: var(--danger);
+            color: #fff;
+        }
+
+        .btn-save {
+            background: var(--accent);
+            color: #000;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        /* ── Scrollbar ── */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--bg-primary);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Header -->
+    <div class="header">
+        <h1>⚡ GeoPro — Feature Review</h1>
+        <div class="stats">
+            <span class="stat-badge" id="stat-total">Total: 0</span>
+            <span class="stat-badge" id="stat-pending">Pending: 0</span>
+            <span class="stat-badge" id="stat-accepted">Accepted: 0</span>
+        </div>
+    </div>
+
+    <!-- Main layout -->
+    <div class="main">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="filter-bar">
+                <select id="filter-class">
+                    <option value="">All Classes</option>
+                </select>
+                <select id="filter-status">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+            </div>
+            <div class="feature-list" id="feature-list"></div>
+        </div>
+
+        <!-- Map -->
+        <div id="map"></div>
+
+        <!-- Detail Panel -->
+        <div class="detail-panel" id="detail-panel">
+            <h2 id="detail-title">Feature Details</h2>
+            <div class="field-group">
+                <label>Class</label>
+                <input id="detail-class" readonly>
+            </div>
+            <div class="field-group">
+                <label>Confidence</label>
+                <input id="detail-confidence" readonly>
+            </div>
+            <div class="field-group">
+                <label>Coordinates</label>
+                <input id="detail-coords" readonly>
+            </div>
+            <div class="field-group">
+                <label>OCR Text (Arabic)</label>
+                <input id="detail-ocr-ar" dir="rtl">
+            </div>
+            <div class="field-group">
+                <label>OCR Text (English)</label>
+                <input id="detail-ocr-en">
+            </div>
+            <div class="field-group">
+                <label>Status</label>
+                <select id="detail-status">
+                    <option value="pending">Pending</option>
+                    <option value="accepted">Accepted</option>
+                    <option value="rejected">Rejected</option>
+                    <option value="edited">Edited</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>Notes</label>
+                <textarea id="detail-notes"></textarea>
+            </div>
+            <div class="field-group">
+                <label>Asset Image</label>
+                <div
+                    style="background: #000; border-radius: 4px; overflow: hidden; min-height: 150px; display: flex; align-items: center; justify-content: center;">
+                    <img id="detail-image" src="" alt="Asset Crop"
+                        style="max-width: 100%; max-height: 300px; object-fit: contain;">
+                </div>
+            </div>
+            <div id="detail-attributes"></div>
+            <div class="btn-row">
+                <button class="btn btn-accept" onclick="setStatus('accepted')">✓ Accept</button>
+                <button class="btn btn-reject" onclick="setStatus('rejected')">✗ Reject</button>
+                <button class="btn btn-save" onclick="saveFeature()">💾 Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MapLibre JS -->
+    <script src="https://unpkg.com/maplibre-gl@4.0.0/dist/maplibre-gl.js"></script>
+
+    <script>
+        // ── State ──
+        let allFeatures = [];
+        let selectedFeatureId = null;
+        let map;
+
+        // ── Class colors ──
+        const classColors = {
+            light_pole: '#fbbf24',
+            tree: '#4ade80',
+            manhole: '#a78bfa',
+            traffic_sign: '#f87171',
+            road_sign: '#38bdf8',
+            guardrail: '#fb923c',
+            traffic_light: '#f472b6',
+            speed_camera: '#e879f9',
+            utility_pole: '#facc15',
+            generic_pole: '#94a3b8',
+        };
+
+        // ── Map init ──
+        map = new maplibregl.Map({
+            container: 'map',
+            style: {
+                version: 8,
+                sources: {
+                    'osm': {
+                        type: 'raster',
+                        tiles: [
+                            'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+                            '/tiles/{z}/{x}/{y}.png' // Local fallback if available
+                        ],
+                        tileSize: 256,
+                        attribution: '&copy; OpenStreetMap Contributors'
+                    }
+                },
+                layers: [
+                    {
+                        id: 'osm-tiles',
+                        type: 'raster',
+                        source: 'osm',
+                        minzoom: 0,
+                        maxzoom: 19
+                    }
+                ]
+            },
+            center: [46.6753, 24.7136], // KSA center
+            zoom: 6
+        });
+
+        map.addControl(new maplibregl.NavigationControl());
+
+        // ── Load features ──
+        async function loadFeatures() {
+            const classFilter = document.getElementById('filter-class').value;
+            const statusFilter = document.getElementById('filter-status').value;
+
+            let url = '/api/features?';
+            if (classFilter) url += `feature_class=${classFilter}&`;
+            if (statusFilter) url += `status=${statusFilter}&`;
+
+            const resp = await fetch(url);
+            const geojson = await resp.json();
+
+            allFeatures = geojson.features || [];
+            updateMapSource(geojson);
+            renderList();
+            updateStats();
+        }
+
+        function updateMapSource(geojson) {
+            // Assign colors to properties for data-driven styling
+            geojson.features.forEach(f => {
+                f.properties.color = classColors[f.properties.feature_class] || '#94a3b8';
+                // MapLibre requires unique integer ID for some state features, but we can use properties
+            });
+
+            if (map.getSource('features')) {
+                map.getSource('features').setData(geojson);
+            } else {
+                map.addSource('features', {
+                    type: 'geojson',
+                    data: geojson
+                });
+
+                map.addLayer({
+                    id: 'features-point',
+                    type: 'circle',
+                    source: 'features',
+                    paint: {
+                        'circle-radius': 6,
+                        'circle-color': ['get', 'color'],
+                        'circle-stroke-width': 1,
+                        'circle-stroke-color': '#fff',
+                        'circle-opacity': 0.85
+                    }
+                });
+
+                // Click event
+                map.on('click', 'features-point', (e) => {
+                    if (e.features.length > 0) {
+                        const feature = e.features[0];
+                        selectFeature(feature.properties.id);
+                    }
+                });
+
+                // Cursor pointer
+                map.on('mouseenter', 'features-point', () => {
+                    map.getCanvas().style.cursor = 'pointer';
+                });
+                map.on('mouseleave', 'features-point', () => {
+                    map.getCanvas().style.cursor = '';
+                });
+            }
+        }
+
+        function renderList() {
+            const list = document.getElementById('feature-list');
+            list.innerHTML = '';
+
+            allFeatures.forEach(f => {
+                const props = f.properties;
+                const [lng, lat] = f.geometry.coordinates;
+                const div = document.createElement('div');
+                div.className = 'feature-item' + (props.id === selectedFeatureId ? ' active' : '');
+                div.innerHTML = `
+                    <div class="fi-header">
+                        <span class="fi-class" style="color:${classColors[props.feature_class] || '#94a3b8'}">
+                            ${props.feature_class}
+                        </span>
+                        <span class="fi-conf">${(props.confidence * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="fi-coords">${lat.toFixed(5)}, ${lng.toFixed(5)}</div>
+                `;
+                div.onclick = () => selectFeature(props.id);
+                list.appendChild(div);
+            });
+        }
+
+        async function selectFeature(id) {
+            selectedFeatureId = id;
+            const resp = await fetch(`/api/features/${id}`);
+            const feature = await resp.json();
+
+            document.getElementById('detail-panel').classList.add('open');
+            document.getElementById('detail-title').textContent = feature.label || feature.feature_class;
+            document.getElementById('detail-class').value = feature.feature_class;
+            document.getElementById('detail-confidence').value = (feature.confidence * 100).toFixed(1) + '%';
+            document.getElementById('detail-coords').value = `${feature.latitude.toFixed(6)}, ${feature.longitude.toFixed(6)}`;
+            document.getElementById('detail-ocr-ar').value = feature.ocr_text_ar || '';
+            document.getElementById('detail-ocr-en').value = feature.ocr_text_en || '';
+            document.getElementById('detail-status').value = feature.review_status;
+            document.getElementById('detail-notes').value = feature.notes || '';
+
+            // Load crop image
+            const imgEl = document.getElementById('detail-image');
+            imgEl.src = ''; // Clear previous
+            imgEl.src = `/api/features/${feature.id}/crop?t=${Date.now()}`; // Cache bust
+
+            // Render dynamic attributes
+            const attrsDiv = document.getElementById('detail-attributes');
+            attrsDiv.innerHTML = '';
+            if (feature.attributes) {
+                Object.entries(feature.attributes).forEach(([key, val]) => {
+                    const group = document.createElement('div');
+                    group.className = 'field-group';
+                    group.innerHTML = `
+                        <label>${key}</label>
+                        <input class="attr-field" data-key="${key}" value="${val}">
+                    `;
+                    attrsDiv.appendChild(group);
+                });
+            }
+
+            // Zoom to feature
+            map.flyTo({
+                center: [feature.longitude, feature.latitude],
+                zoom: 17,
+                speed: 1.2
+            });
+
+            renderList();
+        }
+
+        async function saveFeature() {
+            if (!selectedFeatureId) return;
+
+            const attrs = {};
+            document.querySelectorAll('.attr-field').forEach(input => {
+                attrs[input.dataset.key] = input.value;
+            });
+
+            const body = {
+                ocr_text_ar: document.getElementById('detail-ocr-ar').value,
+                ocr_text_en: document.getElementById('detail-ocr-en').value,
+                review_status: document.getElementById('detail-status').value,
+                notes: document.getElementById('detail-notes').value,
+                attributes: attrs,
+            };
+
+            await fetch(`/api/features/${selectedFeatureId}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
+            });
+
+            loadFeatures();
+        }
+
+        function setStatus(status) {
+            document.getElementById('detail-status').value = status;
+            saveFeature();
+        }
+
+        async function updateStats() {
+            const resp = await fetch('/api/stats');
+            const stats = await resp.json();
+            document.getElementById('stat-total').textContent = `Total: ${stats.total}`;
+
+            const pending = allFeatures.filter(f => f.properties.review_status === 'pending').length;
+            const accepted = allFeatures.filter(f => f.properties.review_status === 'accepted').length;
+            document.getElementById('stat-pending').textContent = `Pending: ${pending}`;
+            document.getElementById('stat-accepted').textContent = `Accepted: ${accepted}`;
+
+            // Populate class filter
+            const classSelect = document.getElementById('filter-class');
+            const existingOptions = new Set([...classSelect.options].map(o => o.value));
+            Object.keys(stats.by_class || {}).forEach(cls => {
+                if (!existingOptions.has(cls)) {
+                    const opt = document.createElement('option');
+                    opt.value = cls;
+                    opt.textContent = cls + ` (${stats.by_class[cls]})`;
+                    classSelect.appendChild(opt);
+                }
+            });
+        }
+
+        // ── Event listeners ──
+        document.getElementById('filter-class').addEventListener('change', loadFeatures);
+        document.getElementById('filter-status').addEventListener('change', loadFeatures);
+
+        // ── Initial load ──
+        map.on('load', loadFeatures);
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,81 @@
+# ==============================================================================
+# GeoPro Demo — Feature Class Definitions
+# ==============================================================================
+# Each class lists the attributes that should be extracted.
+
+feature_classes:
+
+  light_pole:
+    label: "Light Pole / Street Lamp"
+    yolo_class_ids: [0]           # Mapped after model training
+    attributes:
+      height_m: { type: float, unit: meters }
+      material: { type: enum, values: [metal, concrete, wood, composite, unknown] }
+      pole_type: { type: enum, values: [single_arm, double_arm, decorative, high_mast, unknown] }
+
+  tree:
+    label: "Tree / Large Vegetation"
+    yolo_class_ids: [1]
+    attributes:
+      height_m: { type: float, unit: meters }
+      trunk_diameter_m: { type: float, unit: meters, optional: true }
+      species: { type: string, optional: true }
+
+  manhole:
+    label: "Manhole / Utility Cover"
+    yolo_class_ids: [2]
+    attributes:
+      shape: { type: enum, values: [round, square, rectangular, unknown] }
+      material: { type: enum, values: [cast_iron, steel, concrete, composite, unknown] }
+      size_category: { type: enum, values: [small, medium, large] }
+
+  traffic_sign:
+    label: "Traffic Sign"
+    yolo_class_ids: [3]
+    attributes:
+      sign_type: { type: enum, values: [stop, yield, speed_limit, warning, directional, regulatory, unknown] }
+      has_pole: { type: bool }
+      text_content: { type: string, optional: true }
+
+  road_sign:
+    label: "Road Sign / Billboard"
+    yolo_class_ids: [4]
+    attributes:
+      text_content_ar: { type: string, optional: true }
+      text_content_en: { type: string, optional: true }
+      sign_width_m: { type: float, unit: meters, optional: true }
+      sign_height_m: { type: float, unit: meters, optional: true }
+
+  guardrail:
+    label: "Guardrail"
+    yolo_class_ids: [5]
+    attributes:
+      endpoint: { type: enum, values: [start, end] }
+      material: { type: enum, values: [metal, concrete, cable, unknown] }
+
+  traffic_light:
+    label: "Traffic Light"
+    yolo_class_ids: [6]
+    attributes:
+      height_m: { type: float, unit: meters }
+      num_heads: { type: int }
+
+  speed_camera:
+    label: "Speed Camera"
+    yolo_class_ids: [7]
+    attributes:
+      height_m: { type: float, unit: meters }
+      camera_type: { type: enum, values: [fixed, mobile, average_speed, unknown] }
+
+  utility_pole:
+    label: "Utility Pole"
+    yolo_class_ids: [8]
+    attributes:
+      height_m: { type: float, unit: meters }
+      material: { type: enum, values: [wood, metal, concrete, unknown] }
+
+  generic_pole:
+    label: "Generic Pole"
+    yolo_class_ids: [9]
+    attributes:
+      height_m: { type: float, unit: meters }
