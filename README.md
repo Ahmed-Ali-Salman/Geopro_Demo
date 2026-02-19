@@ -20,9 +20,15 @@
 pip install -e ".[dev]"
 
 # 2. Place your data
-#    data/lidar/     → LiDAR files
-#    data/images/    → Panoramic images
-#    data/metadata.csv → Camera metadata
+#    This project uses the NuScenes v1.0-mini dataset.
+#    Download it from: https://www.nuscenes.org/download
+#    
+#    Extract to data/ so it looks like:
+#    data/v1.0-mini/
+#      ├── maps/
+#      ├── samples/
+#      ├── sweeps/
+#      └── v1.0-mini/
 
 # 3. Run the full pipeline
 geopro run --config config/default.yaml
