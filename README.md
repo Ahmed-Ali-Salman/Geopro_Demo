@@ -5,7 +5,7 @@
 ## Features
 
 - **Multi-format LiDAR & NuScenes ingestion** — Support for `.las`, `.laz`, `.ply`, `.pcd` and NuScenes v1.0 schema
-- **YOLOv8 object detection** — Light poles, trees, manholes, traffic signs, guardrails, and more
+- **YOLO26 object detection** — Light poles, trees, manholes, traffic signs, guardrails, and more
 - **Offline OCR** — Arabic + English via PaddleOCR with RTL post-processing
 - **3D point cloud processing** — Ground removal, DBSCAN clustering, geometric attribute extraction
 - **Sensor fusion** — 2D↔3D matching with equirectangular + pinhole projection and 3D-to-2D projection for unmatched clusters
