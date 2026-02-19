@@ -12,7 +12,7 @@
 - **Hybrid Storage** — SQLite-backed feature database + **DuckDB** for high-performance spatial analytics
 - **Interactive review UI** — Offline Leaflet map viewer with editable attributes
 - **Multi-format export** — GeoJSON, Shapefile, CSV
-
+- **Dataset used** — https://www.nuscenes.org/nuscenes#overview
 ## Quick Start
 
 ```bash
