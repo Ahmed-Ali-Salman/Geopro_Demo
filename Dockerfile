@@ -1,3 +1,7 @@
+# GeoPro Demo - Dockerfile
+# Public Image: salmaniv/geopro-demo:v2.2.1
+# https://hub.docker.com/r/salmaniv/geopro-demo
+
 FROM continuumio/miniconda3
 
 WORKDIR /app

@@ -35,10 +35,47 @@ geopro run --config config/default.yaml
 
 # 4. Launch the review UI
 geopro serve
-# → Open http://localhost:5000
+# → Open http://localhost:8000
 ```
 
-## CLI Commands
+## Running with Docker (Recommended)
+
+GeoPro is fully containerized and available on [Docker Hub](https://hub.docker.com/r/salmaniv/geopro-demo). This is the easiest way to run the pipeline without managing Python environments or system dependencies (GDAL, Open3D, etc.).
+
+### 1. Pull the Official Image
+```bash
+docker pull salmaniv/geopro-demo:latest
+```
+
+### 2. Run the Full Pipeline
+To process the NuScenes dataset, mount your local `data` directory to the container. The following command runs the end-to-end detection and fusion pipeline:
+
+**Windows (PowerShell):**
+```powershell
+docker run --rm -it `
+  -v "${PWD}/data:/app/data" `
+  -v "${PWD}/output:/app/output" `
+  salmaniv/geopro-demo:latest geopro run
+```
+
+**Linux / macOS:**
+```bash
+docker run --rm -it \
+  -v "$(pwd)/data:/app/data" \
+  -v "$(pwd)/output:/app/output" \
+  salmaniv/geopro-demo:latest geopro run
+```
+
+### 3. Review Results (Interactive UI)
+Launch the web-based inspector to review the detected assets:
+
+```bash
+docker run -p 8000:8000 `
+  -v "${PWD}/data:/app/data" `
+  -v "${PWD}/output:/app/output" `
+  salmaniv/geopro-demo:latest geopro serve
+```
+*Naviagate to: [http://localhost:8000](http://localhost:8000)*
 
 | Command | Description |
 |---------|-------------|
